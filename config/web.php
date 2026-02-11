@@ -14,7 +14,10 @@ $method = $_SERVER['REQUEST_METHOD'];
 switch ($uri) {
 
     case '/':
-        (new AuthController())->loginForm();
+    case '/home':
+        $userEmail = $_SESSION['user_email'] ?? null;
+        $userRole  = $_SESSION['user_role'] ?? null;
+        require PROJECT_ROOT . 'views' . DIRECTORY_SEPARATOR . 'home' . DIRECTORY_SEPARATOR . 'index.php';
         break;
 
     case '/login':

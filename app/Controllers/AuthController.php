@@ -4,9 +4,18 @@ require_once __DIR__ . '/../Models/User.php';
 
 class AuthController
 {
+    private $viewsPath;
+
+    public function __construct()
+    {
+        // PROJECT_ROOT definieer je in public/index.php
+        // Bijvoorbeeld: define('PROJECT_ROOT', realpath(__DIR__ . '/../') . DIRECTORY_SEPARATOR);
+        $this->viewsPath = PROJECT_ROOT . 'views' . DIRECTORY_SEPARATOR;
+    }
+
     public function loginForm()
     {
-        require __DIR__ . '/../../views/auth/login.php';
+        require $this->viewsPath . 'auth' . DIRECTORY_SEPARATOR . 'login.php';
     }
 
     public function login()
@@ -36,7 +45,7 @@ class AuthController
         $_SESSION['user_email'] = $user['email'];
         $_SESSION['user_role'] = $user['role'];
 
-        header("Location: /users");
+        header("Location: /home");
         exit;
     }
 
@@ -50,7 +59,7 @@ class AuthController
 
     public function registerForm()
     {
-        require __DIR__ . '/../../views/auth/register.php';
+        require $this->viewsPath . 'auth' . DIRECTORY_SEPARATOR . 'register.php';
     }
 
     public function register()
