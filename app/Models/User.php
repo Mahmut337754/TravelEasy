@@ -1,35 +1,31 @@
 <?php
-/**
- * User Model
- */
 
-require_once __DIR__ . '/BaseModel.php';
+require_once __DIR__ . '/../../config/database.php';
 
-class User extends BaseModel {
-    
-    protected $table = 'gebruikers';
+class User
+{
+    private $conn;
 
-    public function findByEmail($email) {
-        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE email = ? AND isActief = 1");
-        $stmt->execute([$email]);
-        return $stmt->fetch();
+    public function __construct()
+    {
+        $this->conn = (new Database())->connect();
     }
 
-    public function create($data) {
-        $stmt = $this->db->prepare("
-            INSERT INTO {$this->table} (email, naam, wachtwoord, rol, isActief, datumAangemaakt, datumGewijzigd)
-            VALUES (?, ?, ?, ?, 1, NOW(), NOW())
-        ");
-        
-        $hashedPassword = password_hash($data['wachtwoord'], PASSWORD_DEFAULT);
-        
-        $stmt->execute([
-            $data['email'],
-            $data['naam'],
-            $hashedPassword,
-            $data['rol']
-        ]);
-        
-        return $this->db->lastInsertId();
+    public function findByEmail($email)
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM users WHERE email = :email LIMIT 1");
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function create($email, $password, $role)
+    {
+        $stmt = $this->conn->prepare("INSERT INTO users (email, password, role) VALUES (:email, :password, :role)");
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':password', $password);
+        $stmt->bindParam(':role', $role);
+        return $stmt->execute();
     }
 }
