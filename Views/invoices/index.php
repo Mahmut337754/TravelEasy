@@ -12,6 +12,10 @@
 </head>
 
 <body>
+    <?php
+    // Include Invoice model for helper methods
+    require_once PROJECT_ROOT . 'app' . DIRECTORY_SEPARATOR . 'Models' . DIRECTORY_SEPARATOR . 'Invoice.php';
+    ?>
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="/home">
@@ -85,6 +89,14 @@
                 </div>
             </div>
         </div>
+
+        <?php if (isset($errorMessage)): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Fout!</strong> <?= $errorMessage ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
 
         <?php if (empty($invoices)): ?>
             <div class="alert alert-info d-flex align-items-center" role="alert">
@@ -185,20 +197,19 @@
             <!-- Summary Cards -->
             <div class="row mt-4">
                 <?php
-                $totalPaid = 0;
-                $totalUnpaid = 0;
-                $totalOverdue = 0;
-                $totalAmount = 0;
-                
-                foreach ($invoices as $inv) {
-                    $totalAmount += $inv['total_amount'];
-                    if ($inv['status'] === 'paid') {
-                        $totalPaid += $inv['total_amount'];
-                    } elseif ($inv['status'] === 'unpaid') {
-                        $totalUnpaid += $inv['total_amount'];
-                    } elseif ($inv['status'] === 'overdue') {
-                        $totalOverdue += $inv['total_amount'];
-                    }
+                try {
+                    $invoiceModel = new Invoice($pdo);
+                    $summary = $invoiceModel->getSummary();
+                    $totalPaid = $summary['paid'];
+                    $totalUnpaid = $summary['unpaid'];
+                    $totalOverdue = $summary['overdue'];
+                    $totalAmount = $summary['total'];
+                } catch (Exception $e) {
+                    error_log("Error getting summary: " . $e->getMessage());
+                    $totalPaid = 0;
+                    $totalUnpaid = 0;
+                    $totalOverdue = 0;
+                    $totalAmount = 0;
                 }
                 ?>
                 <div class="col-md-3">
