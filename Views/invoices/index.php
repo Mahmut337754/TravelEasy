@@ -284,17 +284,34 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Auto-dismiss success messages after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const successAlerts = document.querySelectorAll('.alert-success');
+        // Simple and reliable alert dismiss
+        window.addEventListener('DOMContentLoaded', function() {
+            // Get all alerts
+            var alerts = document.querySelectorAll('.alert');
             
-            successAlerts.forEach(function(alert) {
-                // Create a timeout to fade out and remove the alert
-                setTimeout(function() {
-                    // Use Bootstrap's Alert class to close the alert
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                }, 5000); // 5000 milliseconds = 5 seconds
+            alerts.forEach(function(alert) {
+                // Handle close button click
+                var closeBtn = alert.querySelector('.btn-close');
+                if (closeBtn) {
+                    closeBtn.onclick = function() {
+                        alert.style.transition = 'opacity 0.15s linear';
+                        alert.style.opacity = '0';
+                        setTimeout(function() {
+                            alert.remove();
+                        }, 150);
+                    };
+                }
+                
+                // Auto-dismiss success alerts after 5 seconds
+                if (alert.classList.contains('alert-success')) {
+                    setTimeout(function() {
+                        alert.style.transition = 'opacity 0.15s linear';
+                        alert.style.opacity = '0';
+                        setTimeout(function() {
+                            alert.remove();
+                        }, 150);
+                    }, 5000);
+                }
             });
         });
     </script>
