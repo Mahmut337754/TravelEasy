@@ -212,6 +212,13 @@ INSERT INTO invoices (booking_id,customer_id,invoice_number,invoice_date,due_dat
 
 DELIMITER //
 
+-- Drop existing procedures if they exist
+DROP PROCEDURE IF EXISTS sp_GetAllInvoices //
+DROP PROCEDURE IF EXISTS sp_GetInvoiceById //
+DROP PROCEDURE IF EXISTS sp_CountInvoices //
+DROP PROCEDURE IF EXISTS sp_GetInvoicesByStatus //
+DROP PROCEDURE IF EXISTS sp_GetInvoiceSummary //
+
 -- Get all invoices with customer and trip details
 CREATE PROCEDURE sp_GetAllInvoices()
 BEGIN
@@ -291,12 +298,23 @@ CREATE PROCEDURE sp_GetInvoiceSummary(
     OUT p_total_amount DECIMAL(10,2)
 )
 BEGIN
+    DECLARE v_total_paid DECIMAL(10,2);
+    DECLARE v_total_unpaid DECIMAL(10,2);
+    DECLARE v_total_overdue DECIMAL(10,2);
+    DECLARE v_total_amount DECIMAL(10,2);
+    
     SELECT 
-        COALESCE(SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END), 0) INTO p_total_paid,
-        COALESCE(SUM(CASE WHEN status = 'unpaid' THEN total_amount ELSE 0 END), 0) INTO p_total_unpaid,
-        COALESCE(SUM(CASE WHEN status = 'overdue' THEN total_amount ELSE 0 END), 0) INTO p_total_overdue,
-        COALESCE(SUM(total_amount), 0) INTO p_total_amount
+        COALESCE(SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN status = 'unpaid' THEN total_amount ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN status = 'overdue' THEN total_amount ELSE 0 END), 0),
+        COALESCE(SUM(total_amount), 0)
+    INTO v_total_paid, v_total_unpaid, v_total_overdue, v_total_amount
     FROM invoices;
+    
+    SET p_total_paid = v_total_paid;
+    SET p_total_unpaid = v_total_unpaid;
+    SET p_total_overdue = v_total_overdue;
+    SET p_total_amount = v_total_amount;
 END //
 
 DELIMITER ;
