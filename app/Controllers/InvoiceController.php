@@ -69,5 +69,43 @@ class InvoiceController {
             exit;
         }
     }
+
+    /**
+     * Delete invoice
+     * @param int $id Invoice ID
+     */
+    public function destroy($id) {
+        try {
+            // Check if user is logged in
+            if (!isset($_SESSION['user_email'])) {
+                header('Location: /login');
+                exit;
+            }
+
+            // Validate ID
+            if (!is_numeric($id)) {
+                throw new Exception("Ongeldig factuurnummer");
+            }
+
+            // Delete the invoice
+            $this->invoiceModel->delete($id);
+
+            // Set success message
+            $_SESSION['success_message'] = "Factuur succesvol verwijderd";
+
+            // Redirect to list
+            header('Location: /facturen');
+            exit;
+        } catch (Exception $e) {
+            error_log("InvoiceController::destroy error: " . $e->getMessage());
+            
+            // Set error message
+            $_SESSION['error_message'] = "Fout bij het verwijderen van factuur: " . htmlspecialchars($e->getMessage());
+            
+            // Redirect to list
+            header('Location: /facturen');
+            exit;
+        }
+    }
 }
 

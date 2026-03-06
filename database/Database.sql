@@ -218,6 +218,7 @@ DROP PROCEDURE IF EXISTS sp_GetInvoiceById //
 DROP PROCEDURE IF EXISTS sp_CountInvoices //
 DROP PROCEDURE IF EXISTS sp_GetInvoicesByStatus //
 DROP PROCEDURE IF EXISTS sp_GetInvoiceSummary //
+DROP PROCEDURE IF EXISTS sp_DeleteInvoice //
 
 -- Get all invoices with customer and trip details
 CREATE PROCEDURE sp_GetAllInvoices()
@@ -315,6 +316,12 @@ BEGIN
     SET p_total_unpaid = v_total_unpaid;
     SET p_total_overdue = v_total_overdue;
     SET p_total_amount = v_total_amount;
+END //
+
+-- Delete invoice by ID
+CREATE PROCEDURE sp_DeleteInvoice(IN p_invoice_id INT)
+BEGIN
+    DELETE FROM invoices WHERE id = p_invoice_id;
 END //
 
 DELIMITER ;

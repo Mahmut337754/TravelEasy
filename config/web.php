@@ -183,6 +183,12 @@ switch ($uri) {
     case preg_match('#^/facturen/(\d+)$#', $uri, $matches) ? true : false:
         (new InvoiceController($pdo))->show($matches[1]);
         break;
+    case preg_match('#^/invoices/delete/(\d+)$#', $uri, $matches) ? true : false:
+        (new InvoiceController($pdo))->destroy($matches[1]);
+        break;
+    case preg_match('#^/facturen/delete/(\d+)$#', $uri, $matches) ? true : false:
+        (new InvoiceController($pdo))->destroy($matches[1]);
+        break;
 
     default:
         http_response_code(404);

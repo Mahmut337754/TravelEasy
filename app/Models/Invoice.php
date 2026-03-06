@@ -104,5 +104,23 @@ class Invoice {
             throw new Exception("Fout bij het ophalen van factuuroverzicht: " . $e->getMessage());
         }
     }
+
+    /**
+     * Delete invoice by ID using stored procedure
+     * @param int $id Invoice ID
+     * @return bool True on success
+     */
+    public function delete($id) {
+        try {
+            $stmt = $this->pdo->prepare("CALL sp_DeleteInvoice(:id)");
+            $result = $stmt->execute(['id' => (int)$id]);
+            $stmt->closeCursor();
+            
+            return $result;
+        } catch (PDOException $e) {
+            error_log("Error deleting invoice {$id}: " . $e->getMessage());
+            throw new Exception("Fout bij het verwijderen van factuur: " . $e->getMessage());
+        }
+    }
 }
 
