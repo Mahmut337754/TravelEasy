@@ -90,6 +90,24 @@
             </div>
         </div>
 
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>Succes!</strong> <?= htmlspecialchars($_SESSION['success_message']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Fout!</strong> <?= htmlspecialchars($_SESSION['error_message']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
+
         <?php if (isset($errorMessage)): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -184,6 +202,12 @@
                                         <td>
                                             <a href="/facturen/<?= $invoice['id'] ?>" class="btn btn-sm btn-outline-primary" title="Bekijk details">
                                                 <i class="bi bi-eye"></i> Bekijken
+                                            </a>
+                                            <a href="/facturen/delete/<?= $invoice['id'] ?>" 
+                                               class="btn btn-sm btn-outline-danger" 
+                                               title="Verwijder factuur"
+                                               onclick="return confirm('Weet u zeker dat u deze factuur wilt verwijderen?')">
+                                                <i class="bi bi-trash"></i>
                                             </a>
                                         </td>
                                     </tr>
