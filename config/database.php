@@ -4,7 +4,7 @@ function getDBConnection() {
     $host = 'localhost';
     $dbname = 'TravelEasy';
     $username = 'root';
-    $password = 'admin'; // Change this if your MySQL has a password
+    $password = ''; // Change this if your MySQL has a password
     
     try {
         $pdo = new PDO(
