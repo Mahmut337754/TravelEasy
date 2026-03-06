@@ -205,3 +205,98 @@ INSERT INTO invoices (booking_id,customer_id,invoice_number,invoice_date,due_dat
 (3,3,'INV-2026-002','2026-02-05','2026-03-05',3150.00,551.25,'paid','2026-02-20','EUR'),
 (5,5,'INV-2026-003','2026-02-10','2026-03-10',1290.00,225.75,'unpaid',NULL,'EUR'),
 (2,2,'INV-2026-004','2026-02-15','2026-03-15',880.00,154.00,'overdue',NULL,'EUR');
+
+-- ============================================
+-- STORED PROCEDURES FOR INVOICE MANAGEMENT
+-- ============================================
+
+DELIMITER //
+
+-- Get all invoices with customer and trip details
+CREATE PROCEDURE sp_GetAllInvoices()
+BEGIN
+    SELECT 
+        i.id,
+        i.invoice_number,
+        i.invoice_date,
+        i.due_date,
+        i.total_amount,
+        i.tax_amount,
+        i.status,
+        i.payment_date,
+        i.currency,
+        CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+        c.email AS customer_email,
+        t.title AS trip_title,
+        b.status AS booking_status
+    FROM invoices i
+    INNER JOIN customers c ON i.customer_id = c.id
+    INNER JOIN bookings b ON i.booking_id = b.id
+    INNER JOIN trips t ON b.trip_id = t.id
+    ORDER BY i.invoice_date DESC;
+END //
+
+-- Get invoice by ID
+CREATE PROCEDURE sp_GetInvoiceById(IN p_invoice_id INT)
+BEGIN
+    SELECT 
+        i.*,
+        CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+        c.email AS customer_email,
+        c.address AS customer_address,
+        t.title AS trip_title,
+        t.description AS trip_description
+    FROM invoices i
+    INNER JOIN customers c ON i.customer_id = c.id
+    INNER JOIN bookings b ON i.booking_id = b.id
+    INNER JOIN trips t ON b.trip_id = t.id
+    WHERE i.id = p_invoice_id;
+END //
+
+-- Count total invoices
+CREATE PROCEDURE sp_CountInvoices(OUT p_count INT)
+BEGIN
+    SELECT COUNT(*) INTO p_count FROM invoices;
+END //
+
+-- Get invoices by status
+CREATE PROCEDURE sp_GetInvoicesByStatus(IN p_status VARCHAR(50))
+BEGIN
+    SELECT 
+        i.id,
+        i.invoice_number,
+        i.invoice_date,
+        i.due_date,
+        i.total_amount,
+        i.tax_amount,
+        i.status,
+        i.payment_date,
+        i.currency,
+        CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+        c.email AS customer_email,
+        t.title AS trip_title
+    FROM invoices i
+    INNER JOIN customers c ON i.customer_id = c.id
+    INNER JOIN bookings b ON i.booking_id = b.id
+    INNER JOIN trips t ON b.trip_id = t.id
+    WHERE i.status = p_status
+    ORDER BY i.invoice_date DESC;
+END //
+
+-- Get invoice summary statistics
+CREATE PROCEDURE sp_GetInvoiceSummary(
+    OUT p_total_paid DECIMAL(10,2),
+    OUT p_total_unpaid DECIMAL(10,2),
+    OUT p_total_overdue DECIMAL(10,2),
+    OUT p_total_amount DECIMAL(10,2)
+)
+BEGIN
+    SELECT 
+        COALESCE(SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END), 0) INTO p_total_paid,
+        COALESCE(SUM(CASE WHEN status = 'unpaid' THEN total_amount ELSE 0 END), 0) INTO p_total_unpaid,
+        COALESCE(SUM(CASE WHEN status = 'overdue' THEN total_amount ELSE 0 END), 0) INTO p_total_overdue,
+        COALESCE(SUM(total_amount), 0) INTO p_total_amount
+    FROM invoices;
+END //
+
+DELIMITER ;
