@@ -105,6 +105,23 @@ CREATE TABLE booking_extras (
     FOREIGN KEY (extra_id) REFERENCES extras(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
+CREATE TABLE invoices (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL,
+    customer_id INT NOT NULL,
+    invoice_number VARCHAR(50) NOT NULL UNIQUE,
+    invoice_date DATE NOT NULL,
+    due_date DATE NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
+    tax_amount DECIMAL(10,2) NOT NULL,
+    status ENUM('unpaid','paid','overdue','cancelled') DEFAULT 'unpaid',
+    payment_date DATE NULL,
+    currency CHAR(3) NOT NULL DEFAULT 'EUR',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE RESTRICT,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
 INSERT INTO roles (name) VALUES 
 ('Administrator'),
 ('Manager'),
@@ -182,3 +199,9 @@ INSERT INTO booking_extras (booking_id,extra_id,quantity) VALUES
 (2,3,1),
 (3,4,2),
 (5,5,1);
+
+INSERT INTO invoices (booking_id,customer_id,invoice_number,invoice_date,due_date,total_amount,tax_amount,status,payment_date,currency) VALUES
+(1,1,'INV-2026-001','2026-02-01','2026-03-01',2340.00,409.50,'paid','2026-02-15','EUR'),
+(3,3,'INV-2026-002','2026-02-05','2026-03-05',3150.00,551.25,'paid','2026-02-20','EUR'),
+(5,5,'INV-2026-003','2026-02-10','2026-03-10',1290.00,225.75,'unpaid',NULL,'EUR'),
+(2,2,'INV-2026-004','2026-02-15','2026-03-15',880.00,154.00,'overdue',NULL,'EUR');
