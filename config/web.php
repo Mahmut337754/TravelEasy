@@ -9,6 +9,7 @@ require_once __DIR__ . '/../app/Controllers/TripController.php';
 require_once __DIR__ . '/../app/Controllers/AccommodationController.php';
 require_once __DIR__ . '/../app/Controllers/BookingController.php';
 require_once __DIR__ . '/../app/Controllers/ExtraController.php';
+require_once __DIR__ . '/../app/Controllers/InvoiceController.php';
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
@@ -170,6 +171,17 @@ switch ($uri) {
         break;
     case preg_match('#^/extras/delete/(\d+)$#', $uri, $matches) ? true : false:
         (new ExtraController($pdo))->destroy($matches[1]);
+        break;
+
+    case '/invoices':
+    case '/facturen':
+        (new InvoiceController($pdo))->index();
+        break;
+    case preg_match('#^/invoices/(\d+)$#', $uri, $matches) ? true : false:
+        (new InvoiceController($pdo))->show($matches[1]);
+        break;
+    case preg_match('#^/facturen/(\d+)$#', $uri, $matches) ? true : false:
+        (new InvoiceController($pdo))->show($matches[1]);
         break;
 
     default:

@@ -44,6 +44,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/facturen">
+                            <i class="bi bi-receipt"></i> Facturen
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/contact">
                             <i class="bi bi-envelope"></i> Contact
                         </a>
