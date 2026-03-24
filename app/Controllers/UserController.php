@@ -27,35 +27,41 @@ class UserController
     {
         $this->checkAdmin();
         $users = $this->userModel->getAll();
-        require dirname(__DIR__, 2) . '/Views/users/index.php';
+        require PROJECT_ROOT . 'Views' . DIRECTORY_SEPARATOR . 'users' . DIRECTORY_SEPARATOR . 'index.php';
     }
 
     public function create()
     {
         $this->checkAdmin();
-        $stmt = $this->pdo->query("SELECT id, name FROM roles");
-        $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        require dirname(__DIR__, 2) . '/Views/users/create.php';
+        try {
+            $stmt = $this->pdo->query("SELECT id, name FROM roles");
+            $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Roles ophalen mislukt: " . $e->getMessage());
+            $roles = [];
+        }
+        require PROJECT_ROOT . 'Views' . DIRECTORY_SEPARATOR . 'users' . DIRECTORY_SEPARATOR . 'create.php';
     }
 
     public function store()
     {
         $this->checkAdmin();
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /users');
             exit;
         }
 
-        $name = $_POST['name'] ?? '';
-        $email = $_POST['email'] ?? '';
+        $name    = trim($_POST['name'] ?? '');
+        $email   = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
         $role_id = $_POST['role_id'] ?? '';
 
         $errors = [];
-        if (empty($name)) $errors[] = 'Naam is verplicht.';
-        if (empty($email)) $errors[] = 'E-mail is verplicht.';
+        if (empty($name))     $errors[] = 'Naam is verplicht.';
+        if (empty($email))    $errors[] = 'E-mail is verplicht.';
         if (empty($password)) $errors[] = 'Wachtwoord is verplicht.';
-        if (empty($role_id)) $errors[] = 'Rol is verplicht.';
+        if (empty($role_id))  $errors[] = 'Rol is verplicht.';
 
         if (empty($errors)) {
             $existing = $this->userModel->findByEmail($email);
@@ -71,14 +77,19 @@ class UserController
             exit;
         }
 
-        $this->userModel->create([
-            'name' => $name,
-            'email' => $email,
+        $result = $this->userModel->create([
+            'name'     => $name,
+            'email'    => $email,
             'password' => $password,
-            'role_id' => $role_id
+            'role_id'  => $role_id
         ]);
 
-        $_SESSION['user_success'] = 'Gebruiker succesvol aangemaakt.';
+        if ($result) {
+            $_SESSION['user_success'] = 'Gebruiker succesvol aangemaakt.';
+        } else {
+            $_SESSION['user_errors'] = ['Er is een databasefout opgetreden.'];
+        }
+
         header('Location: /users');
         exit;
     }
@@ -91,28 +102,34 @@ class UserController
             header('Location: /users');
             exit;
         }
-        $stmt = $this->pdo->query("SELECT id, name FROM roles");
-        $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        require dirname(__DIR__, 2) . '/Views/users/edit.php';
+        try {
+            $stmt = $this->pdo->query("SELECT id, name FROM roles");
+            $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Roles ophalen mislukt: " . $e->getMessage());
+            $roles = [];
+        }
+        require PROJECT_ROOT . 'Views' . DIRECTORY_SEPARATOR . 'users' . DIRECTORY_SEPARATOR . 'edit.php';
     }
 
     public function update($id)
     {
         $this->checkAdmin();
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /users');
             exit;
         }
 
-        $name = $_POST['name'] ?? '';
-        $email = $_POST['email'] ?? '';
+        $name    = trim($_POST['name'] ?? '');
+        $email   = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
         $role_id = $_POST['role_id'] ?? '';
 
         $errors = [];
-        if (empty($name)) $errors[] = 'Naam is verplicht.';
-        if (empty($email)) $errors[] = 'E-mail is verplicht.';
-        if (empty($role_id)) $errors[] = 'Rol is verplicht.';
+        if (empty($name))     $errors[] = 'Naam is verplicht.';
+        if (empty($email))    $errors[] = 'E-mail is verplicht.';
+        if (empty($role_id))  $errors[] = 'Rol is verplicht.';
 
         if (empty($errors)) {
             $existing = $this->userModel->findByEmail($email);
@@ -128,14 +145,23 @@ class UserController
             exit;
         }
 
-        $this->userModel->update($id, [
-            'name' => $name,
-            'email' => $email,
-            'password' => $password,
-            'role_id' => $role_id
-        ]);
+        $data = [
+            'name'     => $name,
+            'email'    => $email,
+            'role_id'  => $role_id
+        ];
+        if (!empty($password)) {
+            $data['password'] = $password;
+        }
 
-        $_SESSION['user_success'] = 'Gebruiker succesvol bijgewerkt.';
+        $result = $this->userModel->update($id, $data);
+
+        if ($result) {
+            $_SESSION['user_success'] = 'Gebruiker succesvol bijgewerkt.';
+        } else {
+            $_SESSION['user_errors'] = ['Er is een databasefout opgetreden.'];
+        }
+
         header('Location: /users');
         exit;
     }
@@ -143,12 +169,19 @@ class UserController
     public function destroy($id)
     {
         $this->checkAdmin();
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /users');
             exit;
         }
-        $this->userModel->delete($id);
-        $_SESSION['user_success'] = 'Gebruiker succesvol verwijderd.';
+
+        $result = $this->userModel->delete($id);
+        if ($result) {
+            $_SESSION['user_success'] = 'Gebruiker succesvol verwijderd.';
+        } else {
+            $_SESSION['user_errors'] = ['Kon gebruiker niet verwijderen.'];
+        }
+
         header('Location: /users');
         exit;
     }

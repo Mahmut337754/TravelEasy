@@ -2,20 +2,21 @@
 require_once __DIR__ . '/database.php';
 $pdo = getDBConnection();
 
-require_once __DIR__ . '/../app/Controllers/AuthController.php';
-require_once __DIR__ . '/../app/Controllers/UserController.php';
-require_once __DIR__ . '/../app/Controllers/CustomerController.php';
-require_once __DIR__ . '/../app/Controllers/TripController.php';
-require_once __DIR__ . '/../app/Controllers/AccommodationController.php';
-require_once __DIR__ . '/../app/Controllers/BookingController.php';
-require_once __DIR__ . '/../app/Controllers/ExtraController.php';
-require_once __DIR__ . '/../app/Controllers/InvoiceController.php';
+// Controllers laden (paden ten opzichte van project root)
+require_once PROJECT_ROOT . 'app' . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'AuthController.php';
+require_once PROJECT_ROOT . 'app' . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'UserController.php';
+require_once PROJECT_ROOT . 'app' . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'CustomerController.php';
+require_once PROJECT_ROOT . 'app' . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'TripController.php';
+require_once PROJECT_ROOT . 'app' . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'AccommodationController.php';
+require_once PROJECT_ROOT . 'app' . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'BookingController.php';
+require_once PROJECT_ROOT . 'app' . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'ExtraController.php';
+require_once PROJECT_ROOT . 'app' . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'InvoiceController.php';
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($uri) {
-
+    // Home
     case '/':
     case '/home':
         $userEmail = $_SESSION['user_email'] ?? null;
@@ -23,6 +24,7 @@ switch ($uri) {
         require PROJECT_ROOT . 'views' . DIRECTORY_SEPARATOR . 'home' . DIRECTORY_SEPARATOR . 'index.php';
         break;
 
+    // Authenticatie
     case '/login':
         if ($method === 'POST') {
             (new AuthController($pdo))->login();
@@ -30,11 +32,9 @@ switch ($uri) {
             (new AuthController($pdo))->loginForm();
         }
         break;
-
     case '/logout':
         (new AuthController($pdo))->logout();
         break;
-
     case '/register':
         if ($method === 'POST') {
             (new AuthController($pdo))->register();
@@ -42,11 +42,11 @@ switch ($uri) {
             (new AuthController($pdo))->registerForm();
         }
         break;
-
     case '/dashboard':
         (new AuthController($pdo))->dashboard();
         break;
 
+    // Gebruikers
     case '/users':
         (new UserController($pdo))->index();
         break;
@@ -68,6 +68,7 @@ switch ($uri) {
         (new UserController($pdo))->destroy($matches[1]);
         break;
 
+    // Klanten
     case '/customers':
         (new CustomerController($pdo))->index();
         break;
@@ -89,6 +90,7 @@ switch ($uri) {
         (new CustomerController($pdo))->destroy($matches[1]);
         break;
 
+    // Reizen
     case '/trips':
         (new TripController($pdo))->index();
         break;
@@ -110,6 +112,7 @@ switch ($uri) {
         (new TripController($pdo))->destroy($matches[1]);
         break;
 
+    // Accommodaties
     case '/accommodations':
         (new AccommodationController($pdo))->index();
         break;
@@ -131,6 +134,7 @@ switch ($uri) {
         (new AccommodationController($pdo))->destroy($matches[1]);
         break;
 
+    // Boekingen
     case '/bookings':
         (new BookingController($pdo))->index();
         break;
@@ -152,6 +156,7 @@ switch ($uri) {
         (new BookingController($pdo))->destroy($matches[1]);
         break;
 
+    // Extra opties
     case '/extras':
         (new ExtraController($pdo))->index();
         break;
@@ -173,6 +178,7 @@ switch ($uri) {
         (new ExtraController($pdo))->destroy($matches[1]);
         break;
 
+    // Facturen
     case '/invoices':
     case '/facturen':
         (new InvoiceController($pdo))->index();
@@ -190,6 +196,7 @@ switch ($uri) {
         (new InvoiceController($pdo))->destroy($matches[1]);
         break;
 
+    // 404
     default:
         http_response_code(404);
         echo '404 Not Found';
