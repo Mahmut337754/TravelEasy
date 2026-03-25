@@ -238,6 +238,12 @@
                 <a href="/facturen" class="btn btn-primary">
                     <i class="bi bi-arrow-left"></i> Terug naar overzicht
                 </a>
+                <a href="/facturen/edit/<?= $invoice['id'] ?>" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Bewerken
+                </a>
+                <a href="/facturen/download/<?= $invoice['id'] ?>" class="btn btn-outline-success">
+                    <i class="bi bi-download"></i> Downloaden
+                </a>
                 <button onclick="window.print()" class="btn btn-outline-secondary">
                     <i class="bi bi-printer"></i> Afdrukken
                 </button>
