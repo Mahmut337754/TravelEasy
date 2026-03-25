@@ -183,11 +183,45 @@ switch ($uri) {
     case '/facturen':
         (new InvoiceController($pdo))->index();
         break;
+    case '/invoices/create':
+        if ($method === 'POST') {
+            (new InvoiceController($pdo))->store();
+        } else {
+            (new InvoiceController($pdo))->create();
+        }
+        break;
+    case '/facturen/create':
+        if ($method === 'POST') {
+            (new InvoiceController($pdo))->store();
+        } else {
+            (new InvoiceController($pdo))->create();
+        }
+        break;
     case preg_match('#^/invoices/(\d+)$#', $uri, $matches) ? true : false:
         (new InvoiceController($pdo))->show($matches[1]);
         break;
     case preg_match('#^/facturen/(\d+)$#', $uri, $matches) ? true : false:
         (new InvoiceController($pdo))->show($matches[1]);
+        break;
+    case preg_match('#^/invoices/edit/(\d+)$#', $uri, $matches) ? true : false:
+        if ($method === 'POST') {
+            (new InvoiceController($pdo))->update($matches[1]);
+        } else {
+            (new InvoiceController($pdo))->edit($matches[1]);
+        }
+        break;
+    case preg_match('#^/facturen/edit/(\d+)$#', $uri, $matches) ? true : false:
+        if ($method === 'POST') {
+            (new InvoiceController($pdo))->update($matches[1]);
+        } else {
+            (new InvoiceController($pdo))->edit($matches[1]);
+        }
+        break;
+    case preg_match('#^/invoices/download/(\d+)$#', $uri, $matches) ? true : false:
+        (new InvoiceController($pdo))->download($matches[1]);
+        break;
+    case preg_match('#^/facturen/download/(\d+)$#', $uri, $matches) ? true : false:
+        (new InvoiceController($pdo))->download($matches[1]);
         break;
     case preg_match('#^/invoices/delete/(\d+)$#', $uri, $matches) ? true : false:
         (new InvoiceController($pdo))->destroy($matches[1]);
