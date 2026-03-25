@@ -218,6 +218,9 @@ DROP PROCEDURE IF EXISTS sp_GetInvoiceById //
 DROP PROCEDURE IF EXISTS sp_CountInvoices //
 DROP PROCEDURE IF EXISTS sp_GetInvoicesByStatus //
 DROP PROCEDURE IF EXISTS sp_GetInvoiceSummary //
+DROP PROCEDURE IF EXISTS sp_GetInvoiceCreateOptions //
+DROP PROCEDURE IF EXISTS sp_CreateInvoice //
+DROP PROCEDURE IF EXISTS sp_UpdateInvoice //
 DROP PROCEDURE IF EXISTS sp_DeleteInvoice //
 
 -- Get all invoices with customer and trip details
@@ -316,6 +319,66 @@ BEGIN
     SET p_total_unpaid = v_total_unpaid;
     SET p_total_overdue = v_total_overdue;
     SET p_total_amount = v_total_amount;
+END //
+
+-- Get booking/customer options for invoice create form
+CREATE PROCEDURE sp_GetInvoiceCreateOptions()
+BEGIN
+    SELECT
+        b.id AS booking_id,
+        c.id AS customer_id,
+        CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+        t.title AS trip_title
+    FROM bookings b
+    INNER JOIN customers c ON b.customer_id = c.id
+    INNER JOIN trips t ON b.trip_id = t.id
+    ORDER BY b.id DESC;
+END //
+
+-- Create invoice
+CREATE PROCEDURE sp_CreateInvoice(
+    IN p_booking_id INT,
+    IN p_customer_id INT,
+    IN p_invoice_number VARCHAR(50),
+    IN p_invoice_date DATE,
+    IN p_due_date DATE,
+    IN p_total_amount DECIMAL(10,2),
+    IN p_tax_amount DECIMAL(10,2),
+    IN p_status VARCHAR(50),
+    IN p_payment_date DATE,
+    IN p_currency CHAR(3)
+)
+BEGIN
+    INSERT INTO invoices
+        (booking_id, customer_id, invoice_number, invoice_date, due_date, total_amount, tax_amount, status, payment_date, currency)
+    VALUES
+        (p_booking_id, p_customer_id, p_invoice_number, p_invoice_date, p_due_date, p_total_amount, p_tax_amount, p_status, p_payment_date, p_currency);
+END //
+
+-- Update invoice by ID
+CREATE PROCEDURE sp_UpdateInvoice(
+    IN p_invoice_id INT,
+    IN p_invoice_number VARCHAR(50),
+    IN p_invoice_date DATE,
+    IN p_due_date DATE,
+    IN p_total_amount DECIMAL(10,2),
+    IN p_tax_amount DECIMAL(10,2),
+    IN p_status VARCHAR(50),
+    IN p_payment_date DATE,
+    IN p_currency CHAR(3)
+)
+BEGIN
+    UPDATE invoices
+    SET
+        invoice_number = p_invoice_number,
+        invoice_date = p_invoice_date,
+        due_date = p_due_date,
+        total_amount = p_total_amount,
+        tax_amount = p_tax_amount,
+        status = p_status,
+        payment_date = p_payment_date,
+        currency = p_currency
+    WHERE id = p_invoice_id;
 END //
 
 -- Delete invoice by ID
