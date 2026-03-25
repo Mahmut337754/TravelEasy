@@ -106,6 +106,198 @@ class Invoice {
     }
 
     /**
+     * Get booking options for creating invoices using stored procedure
+     * @return array
+     */
+    public function getCreateOptions() {
+        try {
+            $stmt = $this->pdo->prepare("CALL sp_GetInvoiceCreateOptions()");
+            $stmt->execute();
+            $result = $stmt->fetchAll();
+            $stmt->closeCursor();
+
+            return $result !== false ? $result : [];
+        } catch (PDOException $e) {
+            $message = $e->getMessage();
+            if (strpos($message, '1305') !== false || stripos($message, 'does not exist') !== false) {
+                return $this->getCreateOptionsWithQueryFallback();
+            }
+
+            error_log("Error fetching invoice create options: " . $e->getMessage());
+            throw new Exception("Fout bij het ophalen van boekingen voor factuur: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Create invoice using stored procedure
+     * @param array $data
+     * @return int
+     */
+    public function create(array $data) {
+        try {
+            $stmt = $this->pdo->prepare(
+                "CALL sp_CreateInvoice(:booking_id, :customer_id, :invoice_number, :invoice_date, :due_date, :total_amount, :tax_amount, :status, :payment_date, :currency)"
+            );
+            $stmt->execute([
+                'booking_id' => $data['booking_id'],
+                'customer_id' => $data['customer_id'],
+                'invoice_number' => $data['invoice_number'],
+                'invoice_date' => $data['invoice_date'],
+                'due_date' => $data['due_date'],
+                'total_amount' => $data['total_amount'],
+                'tax_amount' => $data['tax_amount'],
+                'status' => $data['status'],
+                'payment_date' => $data['payment_date'],
+                'currency' => $data['currency'],
+            ]);
+            $stmt->closeCursor();
+
+            $idRow = $this->pdo->query("SELECT LAST_INSERT_ID() AS id")->fetch();
+            return (int)($idRow['id'] ?? 0);
+        } catch (PDOException $e) {
+            $message = $e->getMessage();
+            if (strpos($message, '1305') !== false || stripos($message, 'does not exist') !== false) {
+                return $this->createWithQueryFallback($data);
+            }
+
+            error_log("Error creating invoice: " . $e->getMessage());
+            throw new Exception("Fout bij het aanmaken van factuur: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update invoice by ID using stored procedure
+     * @param int $id Invoice ID
+     * @param array $data Invoice payload
+     * @return bool True on success
+     */
+    public function update($id, array $data) {
+        try {
+            $stmt = $this->pdo->prepare("CALL sp_UpdateInvoice(:id, :invoice_number, :invoice_date, :due_date, :total_amount, :tax_amount, :status, :payment_date, :currency)");
+            $result = $stmt->execute([
+                'id' => (int)$id,
+                'invoice_number' => $data['invoice_number'],
+                'invoice_date' => $data['invoice_date'],
+                'due_date' => $data['due_date'],
+                'total_amount' => $data['total_amount'],
+                'tax_amount' => $data['tax_amount'],
+                'status' => $data['status'],
+                'payment_date' => $data['payment_date'],
+                'currency' => $data['currency'],
+            ]);
+            $stmt->closeCursor();
+
+            return $result;
+        } catch (PDOException $e) {
+            // Fallback for environments where the new stored procedure is not deployed yet.
+            $message = $e->getMessage();
+            if (strpos($message, '1305') !== false || stripos($message, 'does not exist') !== false) {
+                return $this->updateWithQueryFallback($id, $data);
+            }
+
+            error_log("Error updating invoice {$id}: " . $e->getMessage());
+            throw new Exception("Fout bij het bijwerken van factuur: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Fallback update when stored procedure is unavailable
+     * @param int $id Invoice ID
+     * @param array $data Invoice payload
+     * @return bool True on success
+     */
+    private function updateWithQueryFallback($id, array $data) {
+        try {
+            $stmt = $this->pdo->prepare(
+                "UPDATE invoices
+                 SET invoice_number = :invoice_number,
+                     invoice_date = :invoice_date,
+                     due_date = :due_date,
+                     total_amount = :total_amount,
+                     tax_amount = :tax_amount,
+                     status = :status,
+                     payment_date = :payment_date,
+                     currency = :currency
+                 WHERE id = :id"
+            );
+
+            return $stmt->execute([
+                'id' => (int)$id,
+                'invoice_number' => $data['invoice_number'],
+                'invoice_date' => $data['invoice_date'],
+                'due_date' => $data['due_date'],
+                'total_amount' => $data['total_amount'],
+                'tax_amount' => $data['tax_amount'],
+                'status' => $data['status'],
+                'payment_date' => $data['payment_date'],
+                'currency' => $data['currency'],
+            ]);
+        } catch (PDOException $e) {
+            error_log("Fallback invoice update failed for {$id}: " . $e->getMessage());
+            throw new Exception("Fout bij het bijwerken van factuur: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Fallback create options query with joins
+     * @return array
+     */
+    private function getCreateOptionsWithQueryFallback() {
+        try {
+            $stmt = $this->pdo->prepare(
+                "SELECT
+                    b.id AS booking_id,
+                    c.id AS customer_id,
+                    CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+                    t.title AS trip_title
+                 FROM bookings b
+                 INNER JOIN customers c ON b.customer_id = c.id
+                 INNER JOIN trips t ON b.trip_id = t.id
+                 ORDER BY b.id DESC"
+            );
+            $stmt->execute();
+            $result = $stmt->fetchAll();
+            return $result !== false ? $result : [];
+        } catch (PDOException $e) {
+            error_log("Fallback create options query failed: " . $e->getMessage());
+            throw new Exception("Fout bij het ophalen van boekingen voor factuur: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Fallback create when stored procedure is unavailable
+     * @param array $data
+     * @return int
+     */
+    private function createWithQueryFallback(array $data) {
+        try {
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO invoices
+                    (booking_id, customer_id, invoice_number, invoice_date, due_date, total_amount, tax_amount, status, payment_date, currency)
+                 VALUES
+                    (:booking_id, :customer_id, :invoice_number, :invoice_date, :due_date, :total_amount, :tax_amount, :status, :payment_date, :currency)"
+            );
+            $stmt->execute([
+                'booking_id' => $data['booking_id'],
+                'customer_id' => $data['customer_id'],
+                'invoice_number' => $data['invoice_number'],
+                'invoice_date' => $data['invoice_date'],
+                'due_date' => $data['due_date'],
+                'total_amount' => $data['total_amount'],
+                'tax_amount' => $data['tax_amount'],
+                'status' => $data['status'],
+                'payment_date' => $data['payment_date'],
+                'currency' => $data['currency'],
+            ]);
+
+            return (int)$this->pdo->lastInsertId();
+        } catch (PDOException $e) {
+            error_log("Fallback invoice create failed: " . $e->getMessage());
+            throw new Exception("Fout bij het aanmaken van factuur: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Delete invoice by ID using stored procedure
      * @param int $id Invoice ID
      * @return bool True on success
