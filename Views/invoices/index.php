@@ -81,7 +81,10 @@
                         </h1>
                         <p class="text-muted">Bekijk alle facturen van klanten</p>
                     </div>
-                    <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="/facturen/create" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Nieuwe factuur
+                        </a>
                         <span class="badge bg-primary fs-6">
                             Totaal: <?= $invoiceCount ?> facturen
                         </span>
